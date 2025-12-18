@@ -2,6 +2,6 @@ firecrawl-py
 python-dotenv
 beautifulsoup4
 requests
-
+pandas
 
 # .venv\Scripts\activate 
