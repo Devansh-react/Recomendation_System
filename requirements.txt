@@ -3,5 +3,8 @@ python-dotenv
 beautifulsoup4
 requests
 pandas
-
+langchain 
+langchain-text-splitters 
+langchain-community
+langchain-google-genai
 # .venv\Scripts\activate 
