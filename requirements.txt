@@ -7,4 +7,5 @@ langchain
 langchain-text-splitters 
 langchain-community
 langchain-google-genai
+faiss-cpu
 # .venv\Scripts\activate 
