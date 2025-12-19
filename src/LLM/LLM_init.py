@@ -22,7 +22,7 @@ def LLm_init():
 
 if __name__ == "__main__":
     llm = LLm_init()
-    response = llm.invoke("Hello, how are you?")
+    response = llm.invoke("tell me abut python ?")
     print(response.content)
 
 

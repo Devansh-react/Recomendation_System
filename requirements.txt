@@ -8,4 +8,8 @@ langchain-text-splitters
 langchain-community
 langchain-google-genai
 faiss-cpu
+langchain-huggingface
+
+# sentence-transformers(installed)
+
 # .venv\Scripts\activate 

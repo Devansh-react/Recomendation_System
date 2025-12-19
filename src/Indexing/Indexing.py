@@ -15,12 +15,13 @@ from Schema import SHLAssessment
 load_dotenv()
 
 # Embeddings
-embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/gemini-embedding-001"
-)
+from langchain_huggingface import HuggingFaceEmbeddings
+embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
 
-embedding_dim = len(embeddings.embed_query("hello world"))
+
+embedding_dim = len(embeddings.embed_query("test"))
 index = faiss.IndexFlatL2(embedding_dim)
+
 
 vector_store = FAISS(
     embedding_function=embeddings,
@@ -34,7 +35,9 @@ with open("./final_assessments.json", "r", encoding="utf-8") as f:
     raw_data = json.load(f)
 
 # 
+
 assessments = [SHLAssessment(**item) for item in raw_data]
+
 
 # ✅ Convert to LangChain Documents
 documents = [
@@ -53,5 +56,18 @@ documents = [
 doc_ids = vector_store.add_documents(documents)
 print(doc_ids[:5])
 
-
+# Save the FAISS index locally4
 vector_store.save_local("faiss_index")
+try:
+    vector_store =vector_store = FAISS.load_local(
+    "faiss_index",
+    embeddings,
+    allow_dangerous_deserialization=True
+)
+    print("FAISS index loaded successfully.")
+    print(vector_store.index.ntotal)
+    len(assessments)
+
+except Exception as e:
+    print("Error loading FAISS index:", e)
+    
