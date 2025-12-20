@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 load_dotenv()
 os.environ
 
-print("GOOGLE_API_KEY", os.getenv("GOOGLE_API_KEY"))
 
 def LLm_init():
     model = ChatGoogleGenerativeAI(
