@@ -273,17 +273,6 @@ python main.py
 ## 👤 Author
 
 **Candidate Name**
-Generative AI Take-Home Assignment – SHL
+Devansh sharma 
 
 ---
-
-```
-
-If you want, I can next:
-- Tailor this README exactly to **your current repo structure**
-- Shorten it to **strict 2-page PDF format**
-- Add **API examples matching your actual responses**
-- Create a **submission checklist** before final upload
-
-Just tell me 👍
-```
