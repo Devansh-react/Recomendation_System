@@ -34,6 +34,7 @@ Response Format:
 """
 )
 
+
 def run_query(user_query: str):
     messages = [
         system_msg,
