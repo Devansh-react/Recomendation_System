@@ -60,9 +60,3 @@ def run_query(user_query: str):
         "recommendations": []
     }
 
-
-if __name__ == "__main__":
-    result = run_query(
-        "I want to hire new graduates for a sales role in my company, the budget is for about an hour for each test. Give me some options"
-    )
-    print(result)

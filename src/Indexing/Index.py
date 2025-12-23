@@ -7,7 +7,7 @@ from langchain_community.docstore.in_memory import InMemoryDocstore
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 
-from Schema.Schema_index import SHLAssessment
+from src.Schema.Schema_index import SHLAssessment
 
 load_dotenv()
 
