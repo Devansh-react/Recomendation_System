@@ -29,7 +29,6 @@ Rules:
 
 Response Format:
 - Be concise and professional
-- Explain why each assessment is recommended when appropriate
 - Consider the candidate's seniority level, role type, and skill requirements
 """
 )
@@ -51,7 +50,7 @@ def run_query(user_query: str):
         # Enforce final structure in Python (not LLM)
         final_response = {
             "query": user_query,
-            "recommendations": tool_output[:5]  # enforce max-10
+            "recommendations": tool_output[:10]  # enforce max-10
         }
 
         return final_response
@@ -65,6 +64,6 @@ def run_query(user_query: str):
 
 if __name__ == "__main__":
     result = run_query(
-        "Hiring a Java developer with strong collaboration skills"
+        "I want to hire new graduates for a sales role in my company, the budget is for about an hour for each test. Give me some options"
     )
     print(result)

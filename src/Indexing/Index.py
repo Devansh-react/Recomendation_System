@@ -2,7 +2,6 @@ import os
 import json
 import faiss
 from dotenv import load_dotenv
-
 from langchain_community.vectorstores import FAISS
 from langchain_community.docstore.in_memory import InMemoryDocstore
 from langchain_core.documents import Document
