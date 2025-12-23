@@ -1,4 +1,3 @@
-
 # 🚀 SHL Assessment Recommendation System (GenAI)
 
 An intelligent **LLM-powered recommendation system** that helps hiring managers and recruiters find the most relevant **SHL Individual Test Solutions** using natural language queries, job descriptions, or job description URLs.
@@ -8,6 +7,7 @@ This project was built as part of the **SHL GenAI Take-Home Assessment** and dem
 ---
 
 ## 📌 Table of Contents
+
 - [Problem Overview](#problem-overview)
 - [Solution Overview](#solution-overview)
 - [System Architecture](#system-architecture)
@@ -28,24 +28,27 @@ This project was built as part of the **SHL GenAI Take-Home Assessment** and dem
 Recruiters often struggle to identify the right assessments for a given role using keyword-based filters.  
 The goal of this project is to **replace keyword search with semantic understanding** using GenAI and embeddings.
 
-**Input:**  
-- Natural language query  
-- Job description text  
-- URL containing a job description  
+**Input:**
 
-**Output:**  
+- Natural language query
+- Job description text
+- URL containing a job description
+
+**Output:**
+
 - 5–10 relevant **SHL Individual Test Solutions**
 - Each result includes:
   - Assessment Name
   - Official SHL URL
 
-> ⚠️ *Pre-packaged Job Solutions are explicitly excluded*
+> ⚠️ _Pre-packaged Job Solutions are explicitly excluded_
 
 ---
 
 ## 💡 Solution Overview
 
 This system uses a **Retrieval-Augmented Generation (RAG)** style pipeline:
+
 1. Crawl SHL assessment catalog (≥377 individual tests)
 2. Convert assessment metadata into semantic embeddings
 3. Store embeddings in a FAISS vector database
@@ -58,6 +61,7 @@ This system uses a **Retrieval-Augmented Generation (RAG)** style pipeline:
 ## 🏗️ System Architecture
 
 **High-level components:**
+
 - Web Scraper
 - Data Cleaner & Normalizer
 - Embedding Generator
@@ -90,10 +94,12 @@ flowchart TD
 ## 📊 Data Pipeline
 
 1. **Scraping**
+
    - Crawled SHL product catalog
    - Ensured ≥377 Individual Test Solutions
 
 2. **Data Structuring**
+
    - Fields:
      - id
      - name
@@ -124,10 +130,13 @@ flowchart TD
 ## 🌐 API Design
 
 ### 1️⃣ Health Check
+
 ```
 GET /health
 ```
+
 **Response**
+
 ```json
 {
   "status": "ok"
@@ -137,11 +146,13 @@ GET /health
 ---
 
 ### 2️⃣ Assessment Recommendation
+
 ```
 POST /recommend
 ```
 
 **Request**
+
 ```json
 {
   "query": "Looking for a Java developer with strong collaboration skills"
@@ -149,6 +160,7 @@ POST /recommend
 ```
 
 **Response**
+
 ```json
 {
   "recommendations": [
@@ -162,18 +174,20 @@ POST /recommend
 
 ✔️ Returns **1–10 results**  
 ✔️ JSON-only responses  
-✔️ HTTP status codes respected  
+✔️ HTTP status codes respected
 
 ---
 
 ## 📈 Evaluation Strategy
 
 Evaluation was performed using:
+
 - Provided **labeled train dataset**
 - Iterative prompt and embedding tuning
 - Retrieval-focused evaluation (not generation-only)
 
 ### Improvements Applied:
+
 - Enhanced `text_for_embedding`
 - Reduced noise in assessment descriptions
 - Balanced hard vs soft skill recommendations
@@ -203,6 +217,7 @@ This project optimizes **Mean Recall@10** as required.
 ✔️ **Web Application URL**  
 ✔️ **2-page Approach Document**  
 ✔️ **Predictions CSV**
+
 ```
 Query,Assessment_url
 ```
@@ -223,6 +238,7 @@ python main.py
 ```
 
 API available at:
+
 ```
 http://localhost:8000
 ```
@@ -242,9 +258,10 @@ http://localhost:8000
 ## 🙌 Final Notes
 
 This project demonstrates:
+
 - Strong **GenAI system design**
 - Clean, modular, and testable code
 - Clear evaluation methodology
 - Practical application of LLMs beyond prompt engineering
 
-Thank you for reviewing this submission!
+Made with ❤️ by Devansh
