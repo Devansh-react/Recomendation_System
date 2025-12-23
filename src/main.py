@@ -1,5 +1,4 @@
 from langchain.messages import SystemMessage, HumanMessage
-
 from LLM.LLM_init import LLm_init
 from Tool.tool import rag_retrieve
 
