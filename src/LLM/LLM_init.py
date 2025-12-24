@@ -18,10 +18,3 @@ def LLm_init():
     return model
     
     
-
-if __name__ == "__main__":
-    llm = LLm_init()
-    response = llm.invoke("tell me abut python ?")
-    print(response.content)
-
-

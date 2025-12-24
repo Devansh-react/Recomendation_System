@@ -1,39 +1,65 @@
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import List, Dict, Any
+
 from langchain.messages import SystemMessage, HumanMessage
 from LLM.LLM_init import LLm_init
-from Tool.tool import rag_retrieve
+from  Tool.tool import rag_retrieve
 
-# Init model
+
+# ------------------------
+# App Init
+# ------------------------
+app = FastAPI(
+    title="SHL Assessment Recommendation API",
+    version="1.0.0"
+)
+
+# ------------------------
+# LLM + Tool Init (load once)
+# ------------------------
 model = LLm_init()
-
-# Bind tools
 model_with_tools = model.bind_tools([rag_retrieve])
 
 system_msg = SystemMessage(
     content="""
-You are an expert AI assistant specialized in recommending SHL (Saville and Holdsworth Limited) assessments for recruitment and talent development.
+You are an expert AI assistant specialized in recommending SHL (Saville and Holdsworth Limited) assessments.
 
 Your Role:
-- Analyze job requirements, skills, and competencies to identify the most suitable SHL assessments
-- Provide tailored assessment recommendations based on specific hiring needs or talent evaluation scenarios
-- Ensure recommendations are evidence-based and aligned with organizational goals
+- Analyze job requirements, skills, and competencies
+- Recommend the most suitable SHL assessments
 
 Rules:
-- ALWAYS call the retrieval tool to fetch assessments - do not bypass this step
-- DO NOT hallucinate, invent, or suggest assessments not in the tool output
-- Use ONLY the verified data returned by the retrieval tool
-- Return a valid JSON object with key "recommendations"
+- ALWAYS call the retrieval tool to fetch assessments
+- DO NOT hallucinate or invent assessments
+- Use ONLY verified data from the retrieval tool
+- Return valid JSON with key 'recommendations'
 - Each recommendation must include: id, name, url, test_type
-- Prioritize assessments that best match the candidate profile and role requirements
-- Limit recommendations to the top 5 most relevant results
-
-Response Format:
-- Be concise and professional
-- Consider the candidate's seniority level, role type, and skill requirements
+- Limit recommendations to top 5 most relevant results
 """
 )
 
+# ------------------------
+# Request / Response Schemas
+# ------------------------
+class RecommendRequest(BaseModel):
+    query: str
 
-def run_query(user_query: str):
+class Assessment(BaseModel):
+    id: str
+    name: str
+    url: str
+    test_type: List[str]
+
+class RecommendResponse(BaseModel):
+    query: str
+    recommendations: List[Assessment]
+
+
+# ------------------------
+# Core Logic (unchanged)
+# ------------------------
+def run_query(user_query: str) -> Dict[str, Any]:
     messages = [
         system_msg,
         HumanMessage(content=user_query)
@@ -41,22 +67,39 @@ def run_query(user_query: str):
 
     response = model_with_tools.invoke(messages)
 
-    # If model decides to call tool
+    # Tool call path (expected)
     if response.tool_calls:
         tool_call = response.tool_calls[0]
         tool_output = rag_retrieve.invoke(tool_call["args"])
 
-        # Enforce final structure in Python (not LLM)
-        final_response = {
+        return {
             "query": user_query,
-            "recommendations": tool_output[:10]  # enforce max-10
+            "recommendations": tool_output[:5]  # enforce max-5
         }
 
-        return final_response
-
-    # Fallback (should not normally happen)
+    # Fallback (should not happen)
     return {
         "query": user_query,
         "recommendations": []
     }
 
+
+# ------------------------
+# API Endpoints (SHL Spec)
+# ------------------------
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
+
+@app.post("/recommend", response_model=RecommendResponse)
+def recommend(req: RecommendRequest):
+    if not req.query.strip():
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
+
+    result = run_query(req.query)
+
+    if not result["recommendations"]:
+        raise HTTPException(status_code=404, detail="No recommendations found")
+
+    return result
