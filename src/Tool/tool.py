@@ -1,6 +1,6 @@
 from langchain.tools import tool
 from typing import List, Dict
-from Indexing.Index import get_vector_store
+from src.Indexing.Index import get_vector_store
 
 
 def rerank_by_query_overlap(query: str, docs: List) -> List:

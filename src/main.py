@@ -3,8 +3,8 @@ from pydantic import BaseModel
 from typing import List, Dict, Any
 
 from langchain.messages import SystemMessage, HumanMessage
-from LLM.LLM_init import LLm_init
-from  Tool.tool import rag_retrieve
+from src.LLM.LLM_init import LLm_init
+from  src.Tool.tool import rag_retrieve
 
 
 # ------------------------
