@@ -121,3 +121,6 @@ yarl==1.22.0
 zstandard==0.25.0
 fastapi
 uvicorn
+
+
+# run the uvicorn src.main:app --reload outside the src folder and make sure that fodler are impoeted from src 
