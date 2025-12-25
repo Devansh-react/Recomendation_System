@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict, Any
 
+from fastapi.middleware.cors import CORSMiddleware
+
 from langchain.messages import SystemMessage, HumanMessage
 from src.LLM.LLM_init import LLm_init
 from  src.Tool.tool import rag_retrieve
@@ -14,6 +16,19 @@ app = FastAPI(
     title="SHL Assessment Recommendation API",
     version="1.0.0"
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # ------------------------
 # LLM + Tool Init (load once)
