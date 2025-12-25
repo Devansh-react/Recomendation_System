@@ -87,6 +87,16 @@ def run_query(user_query: str) -> Dict[str, Any]:
 # ------------------------
 # API Endpoints (SHL Spec)
 # ------------------------
+@app.get("/")
+def root():
+    return {
+        "message": "SHL Recommendation API is running",
+        "health": "/health",
+        "recommend": "/recommend"
+    }
+
+
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
