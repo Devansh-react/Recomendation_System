@@ -9,9 +9,9 @@ os.environ
 def LLm_init():
     model = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
-        temperature=2.0, 
+        temperature=2.0,
         max_tokens=None,
-        timeout=None,
+        timeout=60,
         max_retries=2,
     )
     

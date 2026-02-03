@@ -6,7 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from langchain.messages import SystemMessage, HumanMessage
 from src.LLM.LLM_init import LLm_init
-from  src.Tool.tool import rag_retrieve
+from src.Tool.tool import rag_retrieve
+from src.Indexing.Index import get_vector_store
 
 
 # ------------------------
@@ -37,6 +38,9 @@ model = LLm_init()
 #  can add multiple tools here
 tools = [rag_retrieve]
 model_with_tools = model.bind_tools(tools)
+
+# Preload FAISS index + embeddings at startup so first /recommend is fast
+get_vector_store()
 
 system_msg = SystemMessage(
     content="""
