@@ -34,7 +34,9 @@ app.add_middleware(
 # LLM + Tool Init (load once)
 # ------------------------
 model = LLm_init()
-model_with_tools = model.bind_tools([rag_retrieve])
+#  can add multiple tools here
+tools = [rag_retrieve]
+model_with_tools = model.bind_tools(tools)
 
 system_msg = SystemMessage(
     content="""

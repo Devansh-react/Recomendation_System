@@ -13,11 +13,6 @@ PROJECT_ROOT = os.path.abspath(
 
 FAISS_PATH = os.path.join(PROJECT_ROOT, "data", "faiss_index")
 
-
-
-# --------------------------------------------------
-# Singleton vector store (cached per process)
-# --------------------------------------------------
 _vector_store = None
 
 
@@ -32,8 +27,6 @@ def get_vector_store():
     # ✅ Return cached instance (important for tools)
     if _vector_store is not None:
         return _vector_store
-
-    # ❌ Do NOT auto-create index at runtime
     if not os.path.exists(FAISS_PATH):
         raise RuntimeError(
             f"FAISS index not found at '{FAISS_PATH}'. "
@@ -45,11 +38,9 @@ def get_vector_store():
     embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-mpnet-base-v2"
     )
-
     _vector_store = FAISS.load_local(
         FAISS_PATH,
         embeddings,
         allow_dangerous_deserialization=True
     )
-
     return _vector_store
