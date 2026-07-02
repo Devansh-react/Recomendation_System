@@ -46,6 +46,7 @@ def build_text_for_embedding(row):
     parts = [f"{name}."]
     if description:
         parts.append(description)
+        
     parts.append(f"Categories: {keys}.")
     parts.append(f"Suitable for job levels: {job_levels}.")
     parts.append(f"Languages available: {languages}.")

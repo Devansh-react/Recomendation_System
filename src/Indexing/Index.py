@@ -48,7 +48,7 @@ def get_vector_store():
     print("✅ Loading FAISS index from disk...")
 
     embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-mpnet-base-v2"
+        model_name="BAAI/bge-large-en-v1.5"
     )
     _vector_store = FAISS.load_local(
         FAISS_PATH,

@@ -1,16 +1,69 @@
 from langchain.tools import tool
 from typing import List, Dict
+from sentence_transformers import CrossEncoder
 from src.Indexing.Index import get_vector_store
 
+RETRIEVE_K = 50   # wide candidate pool from embedding search
+RERANK_K = 25     # how many of those go through the (slower) cross-encoder
+TOP_K = 10        # final returned count
 
-def rerank_by_query_overlap(query: str, docs: List) -> List:
-    query_tokens = set(query.lower().split())
+BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 
-    def overlap_score(doc):
-        text = doc.page_content.lower()
-        return sum(1 for token in query_tokens if token in text)
+# --------------------------------------------------
+# Cross-encoder reranker — loaded once, module-level
+# --------------------------------------------------
+_cross_encoder = None
 
-    return sorted(docs, key=overlap_score, reverse=True)
+def _get_cross_encoder():
+    global _cross_encoder
+    if _cross_encoder is None:
+        print("Loading cross-encoder reranker...")
+        _cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+    return _cross_encoder
+
+
+def rerank_cross_encoder(query: str, docs: List, top_k: int = TOP_K) -> List:
+    """
+    Score each (query, doc) pair jointly with a cross-encoder, which is far
+    more accurate than embedding similarity alone or token-overlap counting —
+    it actually reads both texts together rather than comparing precomputed
+    vectors or counting shared words.
+    """
+    if not docs:
+        return []
+
+    cross_encoder = _get_cross_encoder()
+    pairs = [(query, doc.page_content) for doc in docs]
+    scores = cross_encoder.predict(pairs)
+
+    scored_docs = list(zip(docs, scores))
+    scored_docs.sort(key=lambda x: x[1], reverse=True)
+
+    return [doc for doc, _ in scored_docs[:top_k]]
+
+
+def retrieve_documents(query: str, retrieve_k: int = RETRIEVE_K,
+                        rerank_k: int = RERANK_K, top_k: int = TOP_K) -> List:
+    """
+    Shared retrieval path used by the tool and batch submission.
+
+    Pipeline: wide embedding recall (k=retrieve_k) -> cross-encoder rerank
+    on the top rerank_k candidates -> final top_k.
+    """
+    vector_store = get_vector_store()
+    query = query.strip()
+    prefixed_query = BGE_QUERY_PREFIX + query
+
+    # Stage 1: dense retrieval, wide net
+    docs = vector_store.similarity_search(prefixed_query, k=retrieve_k)
+
+    # Stage 2: cross-encoder rerank on the top rerank_k of those
+    # (reranking all 50 is unnecessary cost; the true positive is almost
+    # always already within the top 25 dense-retrieved candidates)
+    candidates = docs[:rerank_k]
+    reranked = rerank_cross_encoder(query, candidates, top_k=top_k)
+
+    return reranked
 
 
 def _format_result(doc) -> Dict:
@@ -32,15 +85,11 @@ def _format_result(doc) -> Dict:
 @tool
 def rag_retrieve(query: str) -> List[Dict]:
     """
-    Retrieve SHL assessments for a query using embedding search + re-ranking.
-    Use this when the user wants recommendations/a shortlist, or when refining
-    an existing shortlist with new constraints.
+    Retrieve SHL assessments for a query using embedding search + cross-encoder
+    reranking. Use this when the user wants recommendations/a shortlist, or
+    when refining an existing shortlist with new constraints.
     """
-    vector_store = get_vector_store()
-    docs = vector_store.similarity_search(query, k=50)
-    docs = rerank_by_query_overlap(query, docs)
-    docs = docs[:10]
-
+    docs = retrieve_documents(query)
     return [_format_result(doc) for doc in docs]
 
 

@@ -1,7 +1,6 @@
 import pandas as pd
 
-from src.Indexing.Index import get_vector_store
-from src.Tool.tool import rerank_by_query_overlap
+from src.Tool.tool import retrieve_documents
 
 
 # ======================
@@ -10,7 +9,6 @@ from src.Tool.tool import rerank_by_query_overlap
 TEST_DATA_PATH = "data/Test_data.xlsx"
 OUTPUT_CSV_PATH = "submission.csv"
 TOP_K = 10
-RETRIEVE_K = 30
 
 
 # ======================
@@ -23,13 +21,6 @@ def normalize_url(url: str) -> str:
     if not url:
         return url
     return url.rstrip("/").replace("/solutions", "")
-
-
-def retrieve_top_k(vector_store, query: str, retrieve_k: int):
-    """
-    Retrieve more candidates than needed for recall.
-    """
-    return vector_store.similarity_search(query, k=retrieve_k)
 
 
 def load_test_queries(path: str):
@@ -52,9 +43,6 @@ def load_test_queries(path: str):
 # MAIN
 # ======================
 def main():
-    print("🚀 Loading vector store...")
-    vector_store = get_vector_store()
-
     print("📄 Loading test queries...")
     test_queries = load_test_queries(TEST_DATA_PATH)
     print(f"Total test queries: {len(test_queries)}")
@@ -65,20 +53,8 @@ def main():
         print(f"\n[{idx}/{len(test_queries)}] Processing query:")
         print(query[:80], "...")
 
-        # 1️⃣ Retrieve more candidates
-        docs = retrieve_top_k(
-            vector_store=vector_store,
-            query=query,
-            retrieve_k=RETRIEVE_K
-        )
+        docs = retrieve_documents(query, top_k=TOP_K)
 
-        # 2️⃣ Re-rank
-        docs = rerank_by_query_overlap(query, docs)
-
-        # 3️⃣ Take top-10
-        docs = docs[:TOP_K]
-
-        # 4️⃣ Add to CSV rows
         for doc in docs:
             rows.append({
                 "Query": query,
@@ -87,7 +63,6 @@ def main():
                 )
             })
 
-    # 5️⃣ Save CSV
     submission_df = pd.DataFrame(rows)
     submission_df.to_csv(OUTPUT_CSV_PATH, index=False)
 

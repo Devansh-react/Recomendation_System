@@ -57,7 +57,7 @@ documents = [
 # Create embeddings + build index
 # --------------------------------------------------
 embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-mpnet-base-v2"
+    model_name="BAAI/bge-large-en-v1.5"
 )
 
 print("⚙️ Building FAISS index...")

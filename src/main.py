@@ -9,6 +9,8 @@ from langchain.messages import SystemMessage, HumanMessage, AIMessage
 from src.LLM.LLM_init import LLm_init
 from src.Tool.tool import rag_retrieve, compare_assessments
 from src.Indexing.Index import get_vector_store
+from src.Tool.tool import _get_cross_encoder
+_get_cross_encoder()  # pre-warm at startup, not on first request
 
 app = FastAPI(title="SHL Assessment Recommendation API", version="2.1.0")
 app.add_middleware(
@@ -87,6 +89,17 @@ Rules:
 - Never invent an assessment name or URL. Every item must come from a tool result.
 - Keep "reply" concise but include key differentiators (duration, languages,
   test type) when presenting recommendations.
+  
+  - If the user asks you to justify, defend, or reconsider an item ALREADY in the
+  current shortlist (e.g. "is X the right pick?", "do we need Y?"), answer with
+  reasoning grounded in catalog data and re-present the CURRENT shortlist
+  (unchanged unless they explicitly ask for a change). Do not return null here.
+
+- If the user's requested change has no valid catalog alternative (e.g. asking
+  for a "shorter" version of an assessment when none exists), politely explain
+  why and do NOT fabricate an alternative or silently comply. recommendations
+  should be null on this turn unless you are re-presenting the existing list.
+  
 """
 
 # ------------------------
@@ -124,19 +137,38 @@ def build_lc_messages(history: List[ChatMessage]):
             msgs.append(AIMessage(content=m.content))
     return msgs
 
+def extract_text(content) -> str:
+    """
+    Normalize LangChain/Gemini message content into a plain string.
+    Gemini sometimes returns content as a list of content blocks
+    (e.g. [{'type': 'text', 'text': '...', 'extras': {...}}]) instead
+    of a plain string — this flattens either shape safely.
+    """
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, str):
+                parts.append(block)
+            elif isinstance(block, dict):
+                parts.append(block.get("text", ""))
+        return "".join(parts)
+    return str(content) if content else ""
+
 
 def run_chat(history: List[ChatMessage]) -> Dict[str, Any]:
     messages = build_lc_messages(history)
     response = model_with_tools.invoke(messages)
 
-    tool_recommendations = None  # populated deterministically from tool output, not the LLM
+    tool_recommendations = None
 
     if response.tool_calls:
         tool_results = []
         for call in response.tool_calls:
             if call["name"] == "rag_retrieve":
                 out = rag_retrieve.invoke(call["args"])
-                tool_recommendations = out  # rag_retrieve is the only source of truth for a shortlist
+                tool_recommendations = out
             elif call["name"] == "compare_assessments":
                 out = compare_assessments.invoke(call["args"])
             else:
@@ -157,9 +189,9 @@ def run_chat(history: List[ChatMessage]) -> Dict[str, Any]:
             )
         )
         final = model.invoke(messages)
-        raw = final.content
+        raw = extract_text(final.content)   # <-- normalized here
     else:
-        raw = response.content
+        raw = extract_text(response.content)  # <-- normalized here
 
     try:
         cleaned = (
@@ -171,11 +203,10 @@ def run_chat(history: List[ChatMessage]) -> Dict[str, Any]:
         )
         parsed = json.loads(cleaned)
     except Exception:
-        parsed = {"reply": raw, "end_of_conversation": False}
+        parsed = {"reply": raw, "end_of_conversation": False}  # raw is now always a string
 
     parsed.setdefault("end_of_conversation", False)
 
-    # Attach recommendations deterministically — never let the LLM retype them
     if tool_recommendations:
         parsed["recommendations"] = [
             {
@@ -189,6 +220,10 @@ def run_chat(history: List[ChatMessage]) -> Dict[str, Any]:
         ]
     else:
         parsed["recommendations"] = None
+
+    # Final safety net: reply must always be a string, even from the JSON path
+    if not isinstance(parsed.get("reply"), str):
+        parsed["reply"] = extract_text(parsed.get("reply", ""))
 
     return parsed
 
@@ -205,11 +240,19 @@ def chat(req: ChatRequest):
     if not req.messages:
         raise HTTPException(status_code=400, detail="messages cannot be empty")
 
-    if len(req.messages) >= MAX_TURNS:
-        # Hard cap safeguard — force closure rather than exceeding the limit
+    try:
+        if len(req.messages) >= MAX_TURNS:
+            result = run_chat(req.messages)
+            result["end_of_conversation"] = True
+            return result
+
         result = run_chat(req.messages)
-        result["end_of_conversation"] = True
         return result
 
-    result = run_chat(req.messages)
-    return result
+    except Exception as e:
+        print(f"ERROR in /chat: {e}")
+        return ChatResponse(
+            reply="I'm having trouble processing that right now — could you rephrase or try again?",
+            recommendations=None,
+            end_of_conversation=False,
+        )
