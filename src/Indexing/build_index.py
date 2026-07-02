@@ -57,7 +57,7 @@ documents = [
 # Create embeddings + build index
 # --------------------------------------------------
 embeddings = HuggingFaceEmbeddings(
-    model_name="BAAI/bge-large-en-v1.5"
+        model_name="BAAI/bge-small-en-v1.5"
 )
 
 print("⚙️ Building FAISS index...")

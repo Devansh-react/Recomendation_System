@@ -9,8 +9,9 @@ from langchain.messages import SystemMessage, HumanMessage, AIMessage
 from src.LLM.LLM_init import LLm_init
 from src.Tool.tool import rag_retrieve, compare_assessments
 from src.Indexing.Index import get_vector_store
-from src.Tool.tool import _get_cross_encoder
-_get_cross_encoder()  # pre-warm at startup, not on first request
+from src.Tool.tool import _get_cross_encoder # pre-warm at startup, not on first request
+
+# _get_cross_encoder()
 
 app = FastAPI(title="SHL Assessment Recommendation API", version="2.1.0")
 app.add_middleware(
@@ -28,7 +29,7 @@ model = LLm_init()
 tools = [rag_retrieve, compare_assessments]
 model_with_tools = model.bind_tools(tools)
 
-get_vector_store()  # preload at startup
+# get_vector_store()  # preload at startup
 
 MAX_TURNS = 8  # hard cap per assignment spec
 
