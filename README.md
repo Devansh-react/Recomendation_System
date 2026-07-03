@@ -4,7 +4,7 @@ An AI-powered recommendation backend that suggests relevant SHL assessments from
 
 ## Live Links
 
-- Frontend: [https://shl-talent-scout-1.onrender.com/](https://shl-talent-scout-1.onrender.com/)
+- Frontend: [https://shl-talent-scout-1.onrender.com/](https://shl-talent-scout.onrender.com/
 - API: [https://recomendation-system-3.onrender.com](https://recomendation-system-3.onrender.com)
 
 ## Current Project Snapshot
