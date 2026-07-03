@@ -1,8 +1,14 @@
 import os
 import json
+from dotenv import load_dotenv
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_mistralai import MistralAIEmbeddings
 from langchain_core.documents import Document
+
+load_dotenv()
+
+if not os.getenv("MISTRAL_API_KEY"):
+    raise RuntimeError("MISTRAL_API_KEY not set in environment")
 
 # --------------------------------------------------
 # Paths — MUST match src/Indexing/Index.py exactly
@@ -15,25 +21,16 @@ ASSESSMENTS_PATH = os.path.join(
     PROJECT_ROOT, "src", "Indexing", "final_assessments.json"
 )
 
-# --------------------------------------------------
-# Safety Checks
-# --------------------------------------------------
 if not os.path.exists(ASSESSMENTS_PATH):
     raise FileNotFoundError(f"Input data file not found: {ASSESSMENTS_PATH}")
 
 os.makedirs(os.path.dirname(FAISS_PATH), exist_ok=True)
 
-# --------------------------------------------------
-# Load assessment data
-# --------------------------------------------------
 with open(ASSESSMENTS_PATH, "r", encoding="utf-8") as f:
     data = json.load(f)
 
 print(f"📄 Loaded {len(data)} assessments")
 
-# --------------------------------------------------
-# Convert to LangChain Documents
-# --------------------------------------------------
 documents = [
     Document(
         page_content=item["text_for_embedding"],
@@ -54,10 +51,11 @@ documents = [
 ]
 
 # --------------------------------------------------
-# Create embeddings + build index
+# Create embeddings + build index — key passed explicitly
 # --------------------------------------------------
-embeddings = HuggingFaceEmbeddings(
-        model_name="BAAI/bge-small-en-v1.5"
+embeddings = MistralAIEmbeddings(
+    model="mistral-embed",
+    mistral_api_key=os.getenv("MISTRAL_API_KEY"),
 )
 
 print("⚙️ Building FAISS index...")
@@ -66,6 +64,7 @@ vectorstore.save_local(FAISS_PATH)
 
 print("✅ FAISS index successfully built and saved")
 print(f"📂 Location: {FAISS_PATH}")
+
 # --------------------------------------------------
 # Write a build marker so staleness is detectable
 # --------------------------------------------------

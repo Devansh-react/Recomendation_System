@@ -1,7 +1,11 @@
 import os
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_mistralai import MistralAIEmbeddings
 import json
+
+load_dotenv()
+
+
 # --------------------------------------------------
 # Constants (repo-root relative paths)
 # --------------------------------------------------
@@ -47,8 +51,9 @@ def get_vector_store():
 
     print("✅ Loading FAISS index from disk...")
 
-    embeddings = HuggingFaceEmbeddings(
-        model_name="BAAI/bge-small-en-v1.5"
+    embeddings = MistralAIEmbeddings(
+        model="mistral-embed",
+        mistral_api_key=os.getenv("MISTRAL_API_KEY"),
     )
     _vector_store = FAISS.load_local(
         FAISS_PATH,

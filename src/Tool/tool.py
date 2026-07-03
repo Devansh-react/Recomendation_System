@@ -4,7 +4,6 @@ from src.Indexing.Index import get_vector_store
 RETRIEVE_K = 30
 TOP_K = 10
 
-BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 
 
 def retrieve_documents(query: str, retrieve_k: int = RETRIEVE_K, top_k: int = TOP_K) -> List:
@@ -14,8 +13,7 @@ def retrieve_documents(query: str, retrieve_k: int = RETRIEVE_K, top_k: int = TO
     simultaneously. Falls back to plain FAISS similarity ranking.
     """
     vector_store = get_vector_store()
-    prefixed_query = BGE_QUERY_PREFIX + query.strip()
-    docs = vector_store.similarity_search(prefixed_query, k=retrieve_k)
+    docs = vector_store.similarity_search(query.strip(), k=retrieve_k)
     return docs[:top_k]
 
 
