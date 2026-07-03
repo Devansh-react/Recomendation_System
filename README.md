@@ -92,7 +92,7 @@ Recomendation_System/
 Returns:
 
 ```json
-{"status": "ok"}
+{ "status": "ok" }
 ```
 
 ### `POST /chat`
@@ -102,7 +102,7 @@ Request body:
 ```json
 {
   "messages": [
-    {"role": "user", "content": "Need tests for Python backend engineers"}
+    { "role": "user", "content": "Need tests for Python backend engineers" }
   ]
 }
 ```
@@ -162,5 +162,3 @@ uvicorn src.main:app --host 0.0.0.0 --port 10000
 - Render config file: `render.yaml`
 
 ---
-
-If you want, I can do a second pass and also clean up the duplicate-path files and `.pyc` artifacts currently showing in git status.
