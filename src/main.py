@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from langchain.messages import SystemMessage, HumanMessage
 
 from src.LLM.LLM_init import LLm_init
-from src.Tool.tool import retrieve_documents, compare_assessments, _format_result, _get_cross_encoder
+from src.Tool.tool import retrieve_documents, compare_assessments_lookup, _format_result
 from src.Indexing.Index import get_vector_store
 
 app = FastAPI(title="SHL Assessment Recommendation API", version="3.0.0")
@@ -24,8 +24,7 @@ app.add_middleware(
 # ------------------------
 model = LLm_init()
 
-get_vector_store()       # preload FAISS at startup
-_get_cross_encoder()     # preload cross-encoder at startup
+get_vector_store()       # preload FAISS at startup   # preload cross-encoder at startup
 
 MAX_TURNS = 8
 
@@ -176,7 +175,7 @@ def gather_candidates(history: List[ChatMessage]) -> List[Dict]:
         possible_names = re.findall(r"[A-Z][A-Za-z0-9\-\.]*(?:\s+[A-Z0-9][A-Za-z0-9\-\.]*)*", latest_user_msg)
         if possible_names:
             try:
-                compare_results = compare_assessments.invoke({"names": possible_names})
+                compare_results = compare_assessments_lookup(possible_names)
                 for r in compare_results:
                     candidates[r["id"]] = r
             except Exception:
